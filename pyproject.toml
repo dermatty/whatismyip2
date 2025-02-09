@@ -6,11 +6,21 @@ authors = [
     {name = "dermatty",email = "stephan@untergrabner.at"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
+    "importlib (>=1.0.4,<2.0.0)",
+    "toml (>=0.10.2,<0.11.0)"
 ]
 
+[tool.poetry.scripts]
+whatismyip2 = "whatismyip2.whatismyip2:start"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "etec"
+url = "http://etec.iv.at:8123"
+priority = "supplemental"
+
