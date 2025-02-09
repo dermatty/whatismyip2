@@ -115,21 +115,21 @@ def start():
                 else:
                     reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
                 # write index.html
-                    try:
-                        with open(indexhtml, "w") as f:
-                            for h in HTML:
-                                f.writelines(h)
-                                if h == "<body>":
-                                    for r in reslist:
-                                        f.writelines(r + "<br />")
-                        # write to statusfile
-                        with open(statusfile, "w") as f:
-                            for r in reslist:
-                                tstr = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S : ")
-                                s0 = tstr + r
-                                s0 += "\n"
-                                f.write(s0)
-                    except Exception as e:
-                        logger.error(str(e))
+                try:
+                    with open(indexhtml, "w") as f:
+                        for h in HTML:
+                            f.writelines(h)
+                            if h == "<body>":
+                                for r in reslist:
+                                    f.writelines(r + "<br />")
+                    # write to statusfile
+                    with open(statusfile, "w") as f:
+                        for r in reslist:
+                            tstr = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S : ")
+                            s0 = tstr + r
+                            s0 += "\n"
+                            f.write(s0)
+                except Exception as e:
+                    logger.error(str(e))
 
         time.sleep(interval)
