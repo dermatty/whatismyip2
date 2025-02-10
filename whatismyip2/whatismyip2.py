@@ -68,16 +68,16 @@ def start():
 
     ipdir = {}
     for url in interfaces:
-        ipdir[url] = {"Name": interfaces[url], "IP": "0.0.0.0", "org": "-", "country": "-"}
+        ipdir[url] = {"Name": interfaces[url], "IP": "0.0.0.0", "IP_old": "1.1.1.1", "org": "-", "country": "-"}
 
     while True:
         reslist = []
-
+        ip_has_changed = False
         for url in ipdir:
             if_name = ipdir[url]["Name"]
             if_ip = str(ipdir[url]["IP"])
-
-            ip_has_changed = False
+            ipdir[url]["IP_old"] = if_ip
+            only_this_ip_has_changed = False
             try:
                 r = requests.get(url)
                 if "ip4only" in url:
@@ -89,6 +89,7 @@ def start():
                 details = ""
                 if ip != if_ip:
                     ip_has_changed = True
+                    only_this_ip_has_changed = True
                     details = requests.get("http://ipinfo.io/" + str(ip) + "?token=" + token).json()
                     try:
                         org = details["org"]
@@ -101,35 +102,35 @@ def start():
                     ipdir[url]["country"] = country
             except Exception as e:
                 details = "Error: " + str(e)
+            if "Error" not in details:
+                res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[url]["IP"]) + ": "
+                        + ipdir[url]["org"] + ": " + ipdir[url]["country"])
+                reslist.append(res0)
+            else:
+                reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
 
-            if ip_has_changed:
-                if "Error" not in details:
-                    res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[url]["IP"]) + ": "
-                            + ipdir[url]["org"] + ": " + ipdir[url]["country"])
-
-                    reslist.append(res0)
-                    logger.info ("Ip change: " + if_name + " via " + url.split("/")[2] + ": from " +
-                                 str(if_ip) + " to " + str(ipdir[url]["IP"]) + " / " + ipdir[url]["org"] +
-                                 " / " + ipdir[url]["country"])
-
-                else:
-                    reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
-                # write index.html
-                try:
-                    with open(indexhtml, "w") as f:
-                        for h in HTML:
-                            f.writelines(h)
-                            if h == "<body>":
-                                for r in reslist:
-                                    f.writelines(r + "<br />")
-                    # write to statusfile
-                    with open(statusfile, "w") as f:
-                        for r in reslist:
-                            tstr = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S : ")
-                            s0 = tstr + r
-                            s0 += "\n"
-                            f.write(s0)
-                except Exception as e:
-                    logger.error(str(e))
+        # if at least 1 ip has changed update index.html / statusfile
+        if ip_has_changed:
+            for url in ipdir:
+                logger.info("IP change: " + ipdir[url]["Name"] + " via " + url.split("/")[2] + ": from " +
+                            str(ipdir[url]["IP_old"]) + " to " + str(ipdir[url]["IP"]) + " / " + ipdir[url]["org"] +
+                            " / " + ipdir[url]["country"])
+            # write index.html
+            try:
+                with open(indexhtml, "w") as f:
+                    for h in HTML:
+                        f.writelines(h)
+                        if h == "<body>":
+                            for r in reslist:
+                                f.writelines(r + "<br />")
+                # write to statusfile
+                with open(statusfile, "w") as f:
+                    for r in reslist:
+                        tstr = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S : ")
+                        s0 = tstr + r
+                        s0 += "\n"
+                        f.write(s0)
+            except Exception as e:
+                logger.error(str(e))
 
         time.sleep(interval)
