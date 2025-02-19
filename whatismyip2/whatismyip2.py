@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 from . import __version__
-import requests, time, json, sys, os, multiprocessing, configparser, platform, datetime
+import requests, time, json, sys, re, os, multiprocessing, configparser, platform, datetime
 import logging
 import logging.handlers
 import http.server
@@ -19,6 +19,19 @@ def webserver_process (port, directory):
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", int(port)), Handler) as httpd:
         httpd.serve_forever()
+
+def get_external_ip(urllist):
+    ip = None
+    url = ""
+    for url in urllist:
+        try:
+            r = requests.get(url)
+            ip = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', r.text)
+            if ip[-1]:
+                break
+        except (Exception, ):
+            pass
+    return ip[-1], url
 
 def start():
     userhome = expanduser("~")
@@ -48,13 +61,33 @@ def start():
         token = str(cfg["IPINFO"]["token"])
         logger.info("Set ipinfo token to " + str(token) + "!")
 
-        weburls_values = cfg["WEBURLS"]["interfaces"]
-        interfaces = json.loads(weburls_values)
-        logger.info("Interfaces are:" + str(interfaces))
+        #weburls_values = cfg["WEBURLS"]["interfaces"]
+        #interfaces = json.loads(weburls_values)
+        #logger.info("Interfaces are:" + str(interfaces))
 
+        i = 1
+        interfaces = {}
+        while True:
+            try:
+                if_config = cfg["INTERFACES"]["if" + str(i)]
+            except Exception as e:
+                break
+            if0 = json.loads(if_config)
+            try:
+                for key in if0:
+                    interfaces[key] = if0[key]
+            except (Exception, ):
+                pass
+            i += 1
     except Exception as e:
         logger.error(str(e))
         sys.exit()
+
+    if not interfaces:
+        logger.error("Empty interfaces data, exiting ...")
+        sys.exit()
+
+    logger.info("Set interfaces dir to: " + str(interfaces))
 
     motd = ("whatismyip2 " + str(__version__) + " external ip info running on " + str(HOSTNAME) + ", Port " + str(port)
             + " ...")
@@ -67,29 +100,28 @@ def start():
     MP.start()
 
     ipdir = {}
-    for url in interfaces:
-        ipdir[url] = {"Name": interfaces[url], "IP": "0.0.0.0", "IP_old": "1.1.1.1", "org": "-", "country": "-"}
+    for key in interfaces:
+        ipdir[key] = {"IP": "0.0.0.0", "IP_old": "1.1.1.1", "org": "-", "country": "-",
+                      "urllist": interfaces[key]}
 
     while True:
         reslist = []
         ip_has_changed = False
-        for url in ipdir:
-            if_name = ipdir[url]["Name"]
-            if_ip = str(ipdir[url]["IP"])
-            ipdir[url]["IP_old"] = if_ip
-            only_this_ip_has_changed = False
+        for if_name in ipdir:
+            if_ip = str(ipdir[if_name]["IP"])
+            ipdir[if_name]["IP_old"] = if_ip
+            url = ""
+            ip = None
             try:
-                r = requests.get(url)
-                if "ip4only" in url:
-                    ip = r.text.split(",")[1]
-                elif "dyndns" in url:
-                    ip = r.text.split(":")[1].split("<")[0].strip()
-                else:
-                    ip = r.text.strip()
+                ip, url = get_external_ip(ipdir[if_name]["urllist"])
                 details = ""
-                if ip != if_ip:
+                if not ip:
+                    ipdir[if_name]["IP"] = "0.0.0.0"
+                    ipdir[if_name]["org"] = "-"
+                    ipdir[if_name]["country"] = "-"
+                    url = "https://<url-error>"
+                elif ip is not None and ip != if_ip:
                     ip_has_changed = True
-                    only_this_ip_has_changed = True
                     details = requests.get("http://ipinfo.io/" + str(ip) + "?token=" + token).json()
                     try:
                         org = details["org"]
@@ -97,25 +129,23 @@ def start():
                     except Exception:
                         org = "-"
                         country = "-"
-                    ipdir[url]["IP"] = ip
-                    ipdir[url]["org"] = org
-                    ipdir[url]["country"] = country
+                    ipdir[if_name]["IP"] = ip
+                    ipdir[if_name]["org"] = org
+                    ipdir[if_name]["country"] = country
             except Exception as e:
                 details = "Error: " + str(e)
             if "Error" not in details:
-                res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[url]["IP"]) + ": "
-                        + ipdir[url]["org"] + ": " + ipdir[url]["country"])
+                res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[if_name]["IP"]) + ": "
+                        + ipdir[if_name]["org"] + ": " + ipdir[if_name]["country"])
                 reslist.append(res0)
+                logger.info("IP change: " + if_name + " via " + url.split("/")[2] + ": from " +
+                            str(ipdir[if_name]["IP_old"]) + " to " + str(ipdir[if_name]["IP"]) + " / " +
+                            ipdir[if_name]["org"] + " / " + ipdir[if_name]["country"])
             else:
                 reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
 
         # if at least 1 ip has changed update index.html / statusfile
         if ip_has_changed:
-            for url in ipdir:
-                logger.info("IP change: " + ipdir[url]["Name"] + " via " + url.split("/")[2] + ": from " +
-                            str(ipdir[url]["IP_old"]) + " to " + str(ipdir[url]["IP"]) + " / " + ipdir[url]["org"] +
-                            " / " + ipdir[url]["country"])
-            # write index.html
             try:
                 with open(indexhtml, "w") as f:
                     for h in HTML:
