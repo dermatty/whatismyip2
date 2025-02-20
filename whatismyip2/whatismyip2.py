@@ -59,12 +59,11 @@ def start():
         logger.info("Set web server port to " + str(port) + "!")
 
         token = str(cfg["IPINFO"]["token"])
-        logger.info("Set ipinfo token to " + str(token) + "!")
-
-        #weburls_values = cfg["WEBURLS"]["interfaces"]
-        #interfaces = json.loads(weburls_values)
-        #logger.info("Interfaces are:" + str(interfaces))
-
+        ipinfo_url = str(cfg["IPINFO"]["url"])
+        if ipinfo_url[-1] != "/":
+            ipinfo_url += "/"
+        logger.info("Set ipinfo url to " + str(ipinfo_url) + " and token to " + str(token) + "!")
+        
         i = 1
         interfaces = {}
         while True:
@@ -73,6 +72,7 @@ def start():
             except Exception as e:
                 break
             if0 = json.loads(if_config)
+            print(if0)
             try:
                 for key in if0:
                     interfaces[key] = if0[key]
@@ -101,7 +101,7 @@ def start():
 
     ipdir = {}
     for key in interfaces:
-        ipdir[key] = {"IP": "0.0.0.0", "IP_old": "1.1.1.1", "org": "-", "country": "-",
+        ipdir[key] = {"IP": "0.0.0.0", "IP_old": "-", "org": "-", "country": "-",
                       "urllist": interfaces[key]}
 
     while True:
@@ -122,7 +122,7 @@ def start():
                     url = "https://<url-error>"
                 elif ip is not None and ip != if_ip:
                     ip_has_changed = True
-                    details = requests.get("http://ipinfo.io/" + str(ip) + "?token=" + token).json()
+                    details = requests.get(ipinfo_url + str(ip) + "?token=" + token).json()
                     try:
                         org = details["org"]
                         country = details["country"]
