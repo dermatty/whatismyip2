@@ -134,6 +134,7 @@ def start():
                     ipdir[if_name]["country"] = country
             except Exception as e:
                 details = "Error: " + str(e)
+                url = "https://<url-error>"
             if "Error" not in details:
                 res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[if_name]["IP"]) + ": "
                         + ipdir[if_name]["org"] + ": " + ipdir[if_name]["country"])
