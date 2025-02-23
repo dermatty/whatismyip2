@@ -139,9 +139,10 @@ def start():
                 res0 = (if_name + " via " + url.split("/")[2] + ": " + str(ipdir[if_name]["IP"]) + ": "
                         + ipdir[if_name]["org"] + ": " + ipdir[if_name]["country"])
                 reslist.append(res0)
-                logger.info("IP change: " + if_name + " via " + url.split("/")[2] + ": from " +
-                            str(ipdir[if_name]["IP_old"]) + " to " + str(ipdir[if_name]["IP"]) + " / " +
-                            ipdir[if_name]["org"] + " / " + ipdir[if_name]["country"])
+                if ip_has_changed:
+                    logger.info("IP change: " + if_name + " via " + url.split("/")[2] + ": from " +
+                                str(ipdir[if_name]["IP_old"]) + " to " + str(ipdir[if_name]["IP"]) + " / " +
+                                ipdir[if_name]["org"] + " / " + ipdir[if_name]["country"])
             else:
                 reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
 
