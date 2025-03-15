@@ -25,7 +25,9 @@ def get_external_ip(urllist):
     url = ""
     for url in urllist:
         try:
-            r = requests.get(url)
+            r = requests.get(url, timeout=5)
+            if str(r.status_code) != "200":
+                continue
             ip = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', r.text)
             if ip[-1]:
                 break
@@ -72,7 +74,6 @@ def start():
             except Exception as e:
                 break
             if0 = json.loads(if_config)
-            print(if0)
             try:
                 for key in if0:
                     interfaces[key] = if0[key]
