@@ -20,7 +20,7 @@ def webserver_process (port, directory):
     with socketserver.TCPServer(("", int(port)), Handler) as httpd:
         httpd.serve_forever()
 
-def get_external_ip(urllist):
+def get_external_ip(urllist, logger):
     ip = None
     url = ""
     for url in urllist:
@@ -31,8 +31,10 @@ def get_external_ip(urllist):
             ip = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', r.text)
             if ip[-1]:
                 break
-        except (Exception, ):
-            pass
+        except Exception as e:
+            logger.warning(str(url) + ": " + str(e))
+    if not ip:
+        return ip, url
     return ip[-1], url
 
 def start():
@@ -114,12 +116,13 @@ def start():
             url = ""
             ip = None
             try:
-                ip, url = get_external_ip(ipdir[if_name]["urllist"])
+                ip, url = get_external_ip(ipdir[if_name]["urllist"], logger)
                 details = ""
                 if not ip:
                     ipdir[if_name]["IP"] = "0.0.0.0"
                     ipdir[if_name]["org"] = "-"
                     ipdir[if_name]["country"] = "-"
+                    details = "Error"
                     url = "https://<url-error>"
                 elif ip is not None and ip != if_ip:
                     ip_has_changed = True
@@ -145,8 +148,8 @@ def start():
                                 str(ipdir[if_name]["IP_old"]) + " to " + str(ipdir[if_name]["IP"]) + " / " +
                                 ipdir[if_name]["org"] + " / " + ipdir[if_name]["country"])
             else:
-                reslist.append(if_name + " via " + url.split("/")[2] + ": " + details)
-
+                reslist.append(if_name + ": cannot determine IP, connection down?")
+        
         # if at least 1 ip has changed update index.html / statusfile
         if ip_has_changed:
             try:
