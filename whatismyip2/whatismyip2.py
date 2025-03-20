@@ -8,7 +8,9 @@ import http.server
 import socketserver
 from os.path import expanduser
 
-HTML = (["<html>", "<head>", "</head>", "<body>", "</body>", "</html>"])
+# place favicon.ico in ~/.whatismyip
+HTML = (["<html>", "<head>", '<link rel="icon" type="image/x-icon" href="/images/favicon.ico">'
+                             "</head>", "<body>", "</body>", "</html>"])
 HOSTNAME = platform.uname().node
 
 def webserver_process (port, directory):
