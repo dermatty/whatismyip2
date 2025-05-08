@@ -1,6 +1,6 @@
 [project]
 name = "whatismyip2"
-version = "0.1.10"
+version = "0.1.11"
 description = ""
 authors = [
     {name = "dermatty",email = "stephan@untergrabner.at"}
