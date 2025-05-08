@@ -1,16 +1,16 @@
 [project]
 name = "whatismyip2"
-version = "0.1.9"
+version = "0.1.10"
 description = ""
 authors = [
     {name = "dermatty",email = "stephan@untergrabner.at"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "importlib (>=1.0.4,<2.0.0)",
-    "toml (>=0.10.2,<0.11.0)",
-    "requests (>=2.32.3,<3.0.0)"
+    "importlib>=1.0.4,<2.0.0",
+    "toml>=0.10.2,<0.11.0",
+    "requests>=2.32.3,<3.0.0"
 ]
 
 [tool.poetry.scripts]
