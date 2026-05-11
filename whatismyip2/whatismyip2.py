@@ -1,12 +1,14 @@
 #! /usr/bin/python
 
 from . import __version__
-import requests, time, json, sys, re, os, multiprocessing, configparser, platform, datetime
+import requests, time, json, sys, re, os, multiprocessing, configparser, platform, datetime, urllib3
 import logging
 import logging.handlers
 import http.server
 import socketserver
 from os.path import expanduser
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # place favicon.ico in ~/.whatismyip
 HTML = (["<html>", "<head>", '<link rel="icon" type="image/x-icon" href="favicon.ico">'
@@ -27,7 +29,7 @@ def get_external_ip(urllist, logger):
     url = ""
     for url in urllist:
         try:
-            r = requests.get(url, timeout=5)
+            r = requests.get(url, timeout=5, verify=False)
             if str(r.status_code) != "200":
                 continue
             ip = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', r.text)
@@ -128,7 +130,7 @@ def start():
                     url = "https://<url-error>"
                 elif ip is not None and ip != if_ip:
                     ip_has_changed = True
-                    details = requests.get(ipinfo_url + str(ip) + "?token=" + token).json()
+                    details = requests.get(ipinfo_url + str(ip) + "?token=" + token, verify=False).json()
                     try:
                         org = details["org"]
                         country = details["country"]
