@@ -1,27 +1,40 @@
 [project]
 name = "whatismyip2"
-version = "0.1.13"
+version = "0.1.14"
 description = ""
 authors = [
     {name = "dermatty",email = "stephan@untergrabner.at"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "importlib>=1.0.4,<2.0.0",
     "toml>=0.10.2,<0.11.0",
     "requests>=2.32.3,<3.0.0"
 ]
 
-[tool.poetry.scripts]
+[[tool.uv.index]]
+name = "btec"
+url = "http://btec.iv.at:8123"  
+publish-url = "http://btec.iv.at:8123"
+
+[project.scripts]
 whatismyip2 = "whatismyip2.whatismyip2:start"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.2,<0.12"]
+build-backend = "uv_build"
 
-[[tool.poetry.source]]
-name = "btec"
-url = "http://btec.iv.at:8123"
-priority = "supplemental"
+[tool.uv.build-backend]
+module-name = "whatismyip2"
+module-root = ""
 
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.3",
+    "black>=26.3.1",
+    "flake8>=7.3.0",
+    "pytest>=9.0.3",
+    "python-lsp-ruff>=2.3.1",
+    "python-lsp-server>=1.14.0",
+]

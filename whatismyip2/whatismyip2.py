@@ -1,9 +1,9 @@
 #! /usr/bin/python
 
 from . import __version__
-import requests, time, json, sys, re, os, multiprocessing, configparser, platform, datetime, urllib3
+import requests, time, json, sys, re, multiprocessing, configparser, platform, datetime, urllib3
+from importlib import metadata
 import logging
-import logging.handlers
 import http.server
 import socketserver
 from os.path import expanduser
@@ -40,8 +40,8 @@ def get_external_ip(urllist, logger):
     if not ip:
         return ip, url
     return ip[-1], url
-
-def start():
+        
+def start():                     
     userhome = expanduser("~")
     maindir = userhome + "/.whatismyip2/"
     statusfile = maindir + "myipstatus.txt"
@@ -56,6 +56,7 @@ def start():
 
     cfg_file = maindir + "config"
     # read interval & weburls config
+    logger.info ("Starting 'whatismyip2 " + metadata.version("whatismyip2") + "' ...")
     try:
         cfg = configparser.ConfigParser()
         cfg.read(cfg_file)
@@ -77,7 +78,7 @@ def start():
         while True:
             try:
                 if_config = cfg["INTERFACES"]["if" + str(i)]
-            except Exception as e:
+            except Exception:
                 break
             if0 = json.loads(if_config)
             try:
